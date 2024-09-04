@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:news_app_c11_sun/model/source.dart';
+import 'package:news_app_c11_sun/api/model/Source.dart';
+import 'package:news_app_c11_sun/news/NewsListWidget.dart';
 import 'package:news_app_c11_sun/tabs/tab_item.dart';
 
 class TabWidget extends StatefulWidget {
-  const TabWidget({super.key});
+  List<Source>? sources;
+  TabWidget(this.sources);
 
   @override
   State<TabWidget> createState() => _TabWidgetState();
@@ -11,15 +13,16 @@ class TabWidget extends StatefulWidget {
 
 class _TabWidgetState extends State<TabWidget> {
   int selectedIndex = 0;
-  var sources = Source.getSources();
 // TabController controller =TabController(length: length, vsync: vsync)
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-        length: Source.getSources().length,
+        length: widget.sources?.length ?? 0,
         child: Column(
           children: [
             TabBar(
+              padding: EdgeInsets.zero,
+                tabAlignment: TabAlignment.start,
                 isScrollable: true,
                 dividerColor: Colors.transparent,
                 indicatorColor: Colors.transparent,
@@ -28,12 +31,13 @@ class _TabWidgetState extends State<TabWidget> {
                   setState(() {});
                 },
                 labelColor: Colors.green,
-                tabs: sources
-                    .map((source) => TabItem(
+                tabs: widget.sources?.
+                map((source) => TabItem(
                           source: source,
-                          isSelected: selectedIndex == sources.indexOf(source),
+                          isSelected: selectedIndex == widget.sources?.indexOf(source),
                         ))
-                    .toList())
+                    .toList() ?? []),
+            Expanded(child: NewsListWidget(widget.sources?[selectedIndex]))
           ],
         ));
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:news_app_c11_sun/model/source.dart';
+import 'package:news_app_c11_sun/api/model/Source.dart';
 
 class TabItem extends StatelessWidget {
   final Source source;
@@ -16,7 +16,7 @@ class TabItem extends StatelessWidget {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       child: Text(
-        source.name,
+        source.name??"",
         style: TextStyle(color: isSelected ? Colors.white : null),
       ),
     );

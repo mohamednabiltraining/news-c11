@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? CategoryFragment(
                       onCategoryClickCallBack: onCategoryClick,
                     )
-                  : const CategoryDetails(),
+                  : CategoryDetails(selectedCategory!),
         )
       ],
     );
