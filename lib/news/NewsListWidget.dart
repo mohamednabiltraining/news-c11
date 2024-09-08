@@ -1,42 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:news_app_c11_sun/api/ApiManager.dart';
 import 'package:news_app_c11_sun/api/model/Source.dart';
+import 'package:news_app_c11_sun/common/LoadingStateWidget.dart';
+import 'package:news_app_c11_sun/common/UIErrorWidget.dart';
+import 'package:news_app_c11_sun/common/base/BaseState.dart';
+import 'package:news_app_c11_sun/news/NewsViewModel.dart';
 import 'package:news_app_c11_sun/news/NewsWidget.dart';
+import 'package:provider/provider.dart';
 
-class NewsListWidget extends StatelessWidget {
+class NewsListWidget extends StatefulWidget {
   Source? source;
   NewsListWidget(this.source, {super.key});
 
   @override
+  State<NewsListWidget> createState() => _NewsListWidgetState();
+}
+
+class _NewsListWidgetState extends State<NewsListWidget> {
+  NewsViewModel viewModel = NewsViewModel();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    viewModel.getNewsBySourceId(widget.source?.id ?? "");
+  }
+
+  @override
+  void didUpdateWidget(covariant NewsListWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.source != widget.source) {
+      viewModel.getNewsBySourceId(widget.source?.id ?? "");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12),
-      child: FutureBuilder(future: ApiManager.getNewsBySourceId(
-        source?.id??""
-      ),
-          builder: (context, snapshot) {
-            if(snapshot.hasError){
-              return Center(
-                child: Column(
-                  children: [
-                    Text("Something went wrong ${snapshot.error.toString()}"),
-                    ElevatedButton(onPressed: (){}, child: Text("try again"))
-                  ],
-                ),
-              );
-            }
-            if(snapshot.connectionState == ConnectionState.waiting){
-              // loading,
-              return Center(child: CircularProgressIndicator(),);
-            }
-
-            var newsList = snapshot.data?.articles;
-            return ListView.separated(itemBuilder: (context, index) {
-              return Newswidget(newsList?[index]);
-            }, separatorBuilder: (context, index) =>
-                SizedBox(height: 12,)
-                , itemCount: newsList?.length ?? 0);
-          },),
-    );
+        padding: EdgeInsets.symmetric(horizontal: 12),
+        child: MultiProvider(
+          providers: [
+            Provider<NewsViewModel>(create: (_) =>viewModel),
+          ],
+          builder: (context, child) {
+            return Consumer<NewsViewModel>(
+              builder: (context, viewModel, child) {
+                var state = viewModel.state;
+                switch (state) {
+                  case ErrorState():
+                    {
+                      return ErrorStateWidget(
+                          serverError: state.serverError,
+                          error: state.error,
+                          retryButtonText: "Try Again",
+                          retryButtonAction: () => viewModel
+                              .getNewsBySourceId(widget.source?.id ?? ""));
+                    }
+                  case SuccessState():
+                    {
+                      return ListView.separated(
+                          itemBuilder: (context, index) {
+                            return Newswidget(state.data[index]);
+                          },
+                          separatorBuilder: (context, index) => SizedBox(
+                                height: 12,
+                              ),
+                          itemCount: state.data.length ?? 0);
+                    }
+                  case LoadingState():
+                    {
+                      return LoadingStateWidget(state.message);
+                    }
+                }
+              },
+            );
+          },
+        ));
   }
 }
